@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: spring-batch-backup
+  
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:batch_backup_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+  
+  batch:
+    job:
+      enabled: false  # Disable auto-start of jobs
+    jdbc:
+      initialize-schema: always
+
+# Backup Configuration
+backup:
+  retention:
+    days: ${BACKUP_RETENTION_DAYS:90}  # Backup records older than 90 days
+  schedule:
+    cron: ${BACKUP_SCHEDULE_CRON:0 0 2 * * ?}  # Run daily at 2 AM
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    com.example.batchbackup: INFO
+    org.springframework.batch: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

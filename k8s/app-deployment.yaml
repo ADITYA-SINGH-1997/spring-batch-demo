@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: batch-backup
+data:
+  DB_HOST: mysql
+  DB_PORT: "3306"
+  DB_NAME: batch_backup_db
+  DB_USERNAME: batchuser
+  BACKUP_RETENTION_DAYS: "90"
+  BACKUP_SCHEDULE_CRON: "0 0 2 * * ?"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-batch-backup
+  namespace: batch-backup
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spring-batch-backup
+  template:
+    metadata:
+      labels:
+        app: spring-batch-backup
+    spec:
+      containers:
+      - name: spring-batch-backup
+        image: spring-batch-backup:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_NAME
+        - name: DB_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-password
+        - name: BACKUP_RETENTION_DAYS
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: BACKUP_RETENTION_DAYS
+        - name: BACKUP_SCHEDULE_CRON
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: BACKUP_SCHEDULE_CRON
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-batch-backup
+  namespace: batch-backup
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+  selector:
+    app: spring-batch-backup
+  type: ClusterIP
