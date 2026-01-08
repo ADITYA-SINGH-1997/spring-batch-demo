@@ -9,7 +9,7 @@ data:
   DB_NAME: batch_backup_db
   DB_USERNAME: batchuser
   BACKUP_RETENTION_DAYS: "90"
-  BACKUP_SCHEDULE_CRON: "0 0 2 * * ?"
+  BACKUP_SCHEDULE_CRON: "0 23 5 * * ?"  # Testing: 05:23 UTC
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
       - name: spring-batch-backup
-        image: spring-batch-backup:latest
+        image: spring-batch-backup:scheduled
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080

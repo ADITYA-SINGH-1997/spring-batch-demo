@@ -29,7 +29,7 @@ backup:
   retention:
     days: ${BACKUP_RETENTION_DAYS:90}  # Backup records older than 90 days
   schedule:
-    cron: ${BACKUP_SCHEDULE_CRON:0 0 2 * * ?}  # Run daily at 2 AM
+    cron: ${BACKUP_SCHEDULE_CRON:0 23 5 * * ?}  # Run at 05:23 UTC for testing
 
 # Actuator Configuration
 management:
